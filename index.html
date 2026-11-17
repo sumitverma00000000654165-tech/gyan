@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gyan Automation | Premium</title>
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.min.css">
+
+    <style>
+        :root {
+            --bg-color: #050914;
+            --primary-bg: #f4f7f6;
+            --white: #ffffff;
+            --text-dark: #1a1a1a;
+            --border-color: #eef2f5;
+            --shadow: 0 8px 24px rgba(0,0,0,0.06);
+            --shadow-hover: 0 12px 30px rgba(0,0,0,0.12);
+            --transition: all 0.3s cubic-bezier(0.25,0.8,0.25,1);
+            --radius: 20px;
+            
+            --card-bg: rgba(15, 23, 42, 0.65);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --primary: #0ea5e9;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { background-color: var(--primary-bg); min-height: 100vh; display: flex; justify-content: center; color: var(--text-dark); overflow: hidden; }
+
+        .app-container {
+            width: 100%; height: 100vh; background: var(--primary-bg);
+            position: relative; display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* ==========================================
+           INTRO ANIMATION (Splash Screen)
+        =========================================== */
+        #intro-screen {
+            position: absolute; inset: 0; background: radial-gradient(circle at center, #0f172a 0%, #050914 100%);
+            z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.6s ease, visibility 0.6s;
+        }
+        #intro-screen.hide { opacity: 0; visibility: hidden; }
+
+        .intro-logo { font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 40px; opacity: 0; transform: translateY(-20px); transition: all 0.5s; }
+        .intro-logo.show { opacity: 1; transform: translateY(0); }
+
+        .intro-graph { position: relative; width: 300px; height: 380px; }
+        .intro-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+        .intro-line { fill: none; stroke: var(--primary); stroke-width: 2; stroke-dasharray: 200; stroke-dashoffset: 200; transition: stroke-dashoffset 0.5s ease; }
+        .intro-line.draw { stroke-dashoffset: 0; }
+
+        .intro-node {
+            position: absolute; background: rgba(15, 23, 42, 0.9); border: 1px solid var(--primary);
+            border-radius: 10px; padding: 8px 14px; display: flex; align-items: center; gap: 8px;
+            font-size: 12px; font-weight: 600; color: #fff; opacity: 0; transform: scale(0.8);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); box-shadow: 0 0 15px rgba(14, 165, 233, 0.3);
+        }
+        .intro-node.show { opacity: 1; transform: scale(1); }
+        .intro-node i { color: var(--primary); }
+
+        .in-scada { top: 0; left: 50%; transform: translateX(-50%) scale(0.8); }
+        .in-scada.show { transform: translateX(-50%) scale(1); }
+        .in-hmi { top: 85px; left: 50%; transform: translateX(-50%) scale(0.8); }
+        .in-hmi.show { transform: translateX(-50%) scale(1); }
+        .in-plc { top: 170px; left: 50%; transform: translateX(-50%) scale(0.8); background: rgba(14, 165, 233, 0.15); }
+        .in-plc.show { transform: translateX(-50%) scale(1); }
+        .in-vfd { bottom: 20px; left: 0; }
+        .in-servo { bottom: 20px; left: 50%; transform: translateX(-50%) scale(0.8); }
+        .in-servo.show { transform: translateX(-50%) scale(1); }
+        .in-hyd { bottom: 20px; right: 0; }
+
+        /* ==========================================
+           AUTH SCREEN
+        =========================================== */
+        #auth-screen {
+            position: absolute; inset: 0; z-index: 1000; display: flex; overflow-y: auto;
+            background-color: var(--bg-color); transition: opacity 0.5s ease, visibility 0.5s;
+        }
+        #auth-screen.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .bg-grid {
+            position: fixed; inset: 0;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px; mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%); z-index: 0;
+        }
+        .glow-blob { position: fixed; border-radius: 50%; filter: blur(100px); opacity: 0.4; z-index: 0; animation: pulse 10s infinite alternate; }
+        .glow-1 { width: 500px; height: 500px; background: #0ea5e9; top: -150px; left: -150px; }
+        .glow-2 { width: 400px; height: 400px; background: #6366f1; bottom: -100px; right: -100px; animation-delay: -3s; }
+        @keyframes pulse { 0% { transform: scale(1) translate(0, 0); } 100% { transform: scale(1.1) translate(20px, 20px); } }
+
+        .auth-container { display: flex; width: 100%; min-height: 100vh; z-index: 1; position: relative; }
+        
+        /* Left Panel (PC Only) */
+        .left-panel { flex: 1.2; display: none; flex-direction: column; justify-content: center; padding: 40px 5vw; border-right: 1px solid rgba(255,255,255,0.03); }
+        .hero-title { font-family: 'Outfit', sans-serif; font-size: 52px; font-weight: 800; line-height: 1.1; margin-bottom: 16px; background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-subtitle { font-size: 16px; color: var(--text-muted); margin-bottom: 40px; max-width: 480px; line-height: 1.6; }
+        
+        /* LOGIN PAGE ANIMATION */
+        .network-wrapper-auth { position: relative; width: 100%; max-width: 900px; height: 450px; margin-top: 10px; }
+        .svg-lines { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+        .data-line { fill: none; stroke: rgba(14, 165, 233, 0.3); stroke-width: 2; vector-effect: non-scaling-stroke; }
+        .data-line-animated { fill: none; stroke: var(--primary); stroke-width: 3; stroke-dasharray: 10, 15; animation: dash 1.5s linear infinite; filter: drop-shadow(0 0 6px var(--primary)); vector-effect: non-scaling-stroke; }
+        @keyframes dash { to { stroke-dashoffset: -25; } }
+
+        .node { position: absolute; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(14, 165, 233, 0.4); border-radius: 12px; padding: 14px 24px; display: flex; align-items: center; gap: 12px; z-index: 2; backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 15px rgba(14, 165, 233, 0.1); animation: nodePulse 3s infinite alternate; transition: 0.3s; }
+        .node i { font-size: 20px; color: var(--primary); }
+        .node span { font-size: 14px; font-weight: 600; color: #fff; }
+        
+        /* Node Pulse Animation */
+        @keyframes nodePulse {
+            0% { box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 10px rgba(14, 165, 233, 0.1); }
+            100% { box-shadow: 0 4px 20px rgba(0,0,0,0.3), 0 0 25px rgba(14, 165, 233, 0.5); border-color: rgba(14, 165, 233, 0.8); }
+        }
+        .node:hover { transform: translateX(-50%) translateY(-5px) scale(1.02) !important; border-color: #0ea5e9; box-shadow: 0 0 30px rgba(14,165,233,0.6); }
+
+        /* Perfect Spaced out nodes for Login Page */
+        .network-wrapper-auth .node-scada { top: 20px; left: 50%; transform: translateX(-50%); animation-delay: 0s; }
+        .network-wrapper-auth .node-hmi { top: 130px; left: 50%; transform: translateX(-50%); animation-delay: 0.5s; }
+        .network-wrapper-auth .node-plc { top: 240px; left: 50%; transform: translateX(-50%); background: rgba(14, 165, 233, 0.15); border-color: rgba(14, 165, 233, 0.6); animation-delay: 1s; }
+        .network-wrapper-auth .node-vfd { top: 370px; left: 15%; transform: translateX(-50%); animation-delay: 1.5s; }
+        .network-wrapper-auth .node-servo { top: 370px; left: 50%; transform: translateX(-50%); animation-delay: 1.5s; }
+        .network-wrapper-auth .node-hyd { top: 370px; left: 85%; transform: translateX(-50%); animation-delay: 1.5s; }
+
+        /* Right Panel */
+        .right-panel { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; background: radial-gradient(circle at 50% 50%, rgba(14, 165, 233, 0.05) 0%, transparent 70%); }
+        .auth-card { width: 100%; max-width: 420px; background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 40px; backdrop-filter: blur(20px); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        
+        .logo-wrapper { text-align: center; margin-bottom: 30px; }
+        .logo-icon { width: 64px; height: 64px; background: linear-gradient(135deg, #0ea5e9, #2563eb); border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; box-shadow: 0 10px 25px rgba(14, 165, 233, 0.3); }
+        .logo-icon i { font-size: 28px; color: #fff; }
+        .logo-wrapper h2 { font-family: 'Outfit', sans-serif; font-size: 28px; font-weight: 700; color: #fff; }
+        .logo-wrapper p { font-size: 11px; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 6px; font-weight: 600; }
+
+        .tabs { display: flex; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 5px; margin-bottom: 28px; position: relative; border: 1px solid rgba(255,255,255,0.05); }
+        .tab { flex: 1; text-align: center; padding: 10px; font-size: 14px; font-weight: 600; color: var(--text-muted); cursor: pointer; z-index: 2; transition: color 0.3s; }
+        .tab.active { color: #fff; }
+        .tab-indicator { position: absolute; top: 5px; left: 5px; width: calc(50% - 5px); height: calc(100% - 10px); background: rgba(255,255,255,0.1); border-radius: 8px; transition: transform 0.3s ease; z-index: 1; }
+
+        .input-group { position: relative; margin-bottom: 20px; }
+        .input-group i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 15px; }
+        .input-group input { width: 100%; padding: 16px 16px 16px 48px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 12px; color: #fff; font-size: 14px; outline: none; }
+        .input-group input:focus { border-color: var(--primary); background: rgba(14, 165, 233, 0.05); }
+        
+        .form-options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-size: 13px; }
+        .remember { display: flex; align-items: center; gap: 8px; color: var(--text-muted); }
+        .forgot { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+        .btn-submit { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary), #2563eb); border: none; border-radius: 12px; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(14, 165, 233, 0.3); }
+        .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        .auth-footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); }
+        .auth-footer p { color: #10b981; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+        /* ==========================================
+           MAIN APP (Dashboard)
+        =========================================== */
+        #app-screen { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--primary-bg); opacity: 0; pointer-events: none; transition: var(--transition); }
+        #app-screen.active { opacity: 1; pointer-events: auto; }
+
+        .app-header { background: #fff; padding: 16px 5vw; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border-color); }
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .menu-icon, .bell-icon { font-size: 20px; color: #334155; cursor: pointer; }
+        .app-title { font-size: 18px; font-weight: 700; color: #0f172a; }
+
+        /* Main Content (Scrolling Fix) */
+        .main-content { flex: 1; overflow-y: auto; position: relative; scroll-behavior: smooth; padding-bottom: 100px; }
+        .main-content::-webkit-scrollbar { display: none; }
+
+        .view-section { display: none; padding: 30px 5vw; animation: slideUp .4s ease; width: 100%; }
+        .view-section.active { display: block; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+        .greeting-area { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .greeting h2 { font-size: 26px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+        .greeting p { font-size: 14px; color: #64748b; }
+        .profile-avatar { width: 50px; height: 50px; border-radius: 50%; background: url('https://cdn-icons-png.flaticon.com/512/3135/3135715.png') center/cover; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,.12); }
+
+        /* Banner (Slider & Graphic) */
+        .banner-container { margin-bottom: 30px; }
+        
+        /* Mobile Slider */
+        .slider-wrapper { width: 100%; height: 220px; overflow: hidden; position: relative; border-radius: 16px; background: #0f172a; box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .slider-track { display: flex; height: 100%; transition: transform .7s ease; }
+        .slide-img { min-width: 100%; height: 100%; object-fit: cover; }
+        
+        /* PC Graphic - Dark Theme with Perfect Wires */
+        .desktop-graphic { display: none; width: 100%; padding: 40px 20px; position: relative; overflow: hidden; background: radial-gradient(circle at center, #1e293b 0%, #0b1220 100%); border-radius: 24px; box-shadow: 0 10px 40px rgba(14, 165, 233, 0.15), inset 0 0 60px rgba(14, 165, 233, 0.05); border: 1px solid rgba(14, 165, 233, 0.15); }
+        .desktop-graphic .network-wrapper { height: 450px; margin: 0 auto; width: 100%; max-width: 1200px; position: relative; }
+        
+        /* Dark theme nodes for PC */
+        .desktop-graphic .node { background: rgba(15, 23, 42, 0.9); border-color: rgba(14, 165, 233, 0.4); padding: 16px 28px; box-shadow: 0 4px 20px rgba(0,0,0,0.5), 0 0 15px rgba(14, 165, 233, 0.1); }
+        .desktop-graphic .node span { color: #fff; font-size: 15px; font-weight: 600; }
+        .desktop-graphic .node i { color: #0ea5e9; font-size: 22px; }
+        .desktop-graphic .data-line { stroke: rgba(14, 165, 233, 0.2); stroke-width: 2; }
+        .desktop-graphic .data-line-animated { stroke: #0ea5e9; stroke-width: 3; filter: drop-shadow(0 0 8px #0ea5e9); }
+
+        /* Perfect PC Node Positioning */
+        .desktop-graphic .node-scada { top: 20px; left: 50%; transform: translateX(-50%); animation-delay: 0s; }
+        .desktop-graphic .node-hmi { top: 130px; left: 50%; transform: translateX(-50%); animation-delay: 0.5s; }
+        .desktop-graphic .node-plc { top: 240px; left: 50%; transform: translateX(-50%); background: rgba(14, 165, 233, 0.15); border-color: rgba(14, 165, 233, 0.6); animation-delay: 1s; }
+        .desktop-graphic .node-vfd { top: 370px; left: 15%; transform: translateX(-50%); animation-delay: 1.5s; }
+        .desktop-graphic .node-servo { top: 370px; left: 50%; transform: translateX(-50%); animation-delay: 1.5s; }
+        .desktop-graphic .node-hyd { top: 370px; left: 85%; transform: translateX(-50%); animation-delay: 1.5s; }
+
+        /* Cards Grid (Smart Responsive) */
+        .home-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        
+        .tile { position: relative; overflow: hidden; border: none; cursor: pointer; color: #fff; min-height: 150px; border-radius: 20px; padding: 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; box-shadow: 0 8px 20px rgba(15,23,42,.14); transition: transform .25s; text-align: center; }
+        .tile:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(15,23,42,.2); }
+        .tile-ico { width: 60px; height: 60px; border-radius: 18px; background: rgba(255,255,255,.22); border: 1px solid rgba(255,255,255,.35); display: flex; align-items: center; justify-content: center; font-size: 26px; }
+        .tile-lbl { font-size: 15px; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,.18); }
+        
+        .t-orange { background: linear-gradient(145deg, #ff9a4d, #f2691b); }
+        .t-blue { background: linear-gradient(145deg, #6aa6f5, #3d7fe0); }
+        .t-cyan { background: linear-gradient(145deg, #22d3ee, #0aa5c7); }
+        .t-green { background: linear-gradient(145deg, #2fd35b, #14a83a); }
+        .t-royal { background: linear-gradient(145deg, #2f7bf0, #1553c9); }
+        .t-yellow { background: linear-gradient(145deg, #f7c60f, #e29a00); }
+        .t-pink { background: linear-gradient(145deg, #ff3d86, #e0105f); }
+        .t-deep { background: linear-gradient(145deg, #ff8433, #e4570c); }
+
+        /* Common Views */
+        .sub-head { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+        .back-btn { width: 46px; height: 46px; border-radius: 14px; border: none; background: #fff; color: #0f172a; box-shadow: var(--shadow); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+        .section-title { font-size: 20px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+        
+        /* Batch Cards */
+        .batch-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px; }
+        
+        .batch-card { background: #fff; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); display: flex; flex-direction: column; cursor: pointer; transition: var(--transition); border: 1px solid var(--border-color); }
+        .batch-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-hover); }
+        .batch-img { height: 200px; background-size: cover; background-position: center; position: relative; background-color: #e2e8f0; }
+        .ribbon.free { position: absolute; top: 12px; left: 12px; background: #10b981; color: #fff; font-size: 11px; font-weight: 700; padding: 6px 14px; border-radius: 6px; }
+        .batch-body { padding: 24px; flex: 1; display: flex; flex-direction: column; }
+        .batch-title { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px; }
+        .batch-meta { font-size: 13px; color: #64748b; margin-bottom: 20px; }
+        .batch-foot { display: flex; align-items: center; justify-content: space-between; margin-top: auto; }
+        .batch-price { font-size: 22px; font-weight: 800; color: #0f172a; }
+        .btn-buy { padding: 12px 24px; border: none; border-radius: 12px; background: linear-gradient(135deg, #0ea5e9, #2563eb); color: #fff; font-weight: 600; font-size: 14px; }
+        .btn-buy.owned { background: #e8f7ef; color: #059669; }
+
+        /* Chat Layout Perfect Fix */
+        #chat-view { display: none; }
+        #chat-view.active {
+            display: flex; flex-direction: column;
+            position: absolute; top: 62px; bottom: 70px; left: 0; right: 0;
+            background: #f8fafc; z-index: 90; padding: 0; width: 100%;
+        }
+        .chat-messages { flex: 1; overflow-y: auto; padding: 30px 5vw; display: flex; flex-direction: column; gap: 16px; }
+        .chat-input-area { background: #fff; padding: 16px 5vw; display: flex; align-items: center; gap: 16px; border-top: 1px solid var(--border-color); }
+        .chat-input-area input { flex: 1; border: none; outline: none; font-size: 15px; padding: 16px 24px; background: #f1f5f9; border-radius: 30px; }
+        .chat-input-area i { font-size: 22px; color: #0ea5e9; cursor: pointer; }
+
+        /* Bottom Nav (Fixed) */
+        .bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; height: 70px; background: #fff; display: flex; justify-content: space-around; align-items: center; box-shadow: 0 -4px 20px rgba(0,0,0,.05); z-index: 100; border-top: 1px solid var(--border-color); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: #94a3b8; font-size: 11px; font-weight: 600; cursor: pointer; padding: 8px 16px; transition: 0.2s; }
+        .nav-item i { font-size: 22px; margin-bottom: 4px; }
+        .nav-item.active { color: #0ea5e9; }
+
+        /* Drawer */
+        .drawer-overlay { position: absolute; inset: 0; background: rgba(15,23,42,.6); z-index: 200; opacity: 0; pointer-events: none; transition: var(--transition); }
+        .drawer-overlay.active { opacity: 1; pointer-events: auto; }
+        .drawer { position: absolute; top: 0; left: -85%; width: 85%; max-width: 350px; height: 100%; background: var(--white); z-index: 201; transition: var(--transition); padding: 30px 24px; display: flex; flex-direction: column; box-shadow: 10px 0 30px rgba(0,0,0,0.1); }
+        .drawer.active { left: 0; }
+        .drawer-profile { border-bottom: 1px solid var(--border-color); padding-bottom: 24px; margin-bottom: 24px; }
+        .drawer-profile img { width: 70px; height: 70px; border-radius: 50%; margin-bottom: 16px; }
+        .drawer-profile h2 { font-size: 20px; font-weight: 700; color: #0f172a; }
+        .drawer-menu { list-style: none; flex: 1; }
+        .drawer-menu li { padding: 16px 14px; display: flex; align-items: center; gap: 16px; font-size: 15px; font-weight: 500; color: #475569; cursor: pointer; border-radius: 12px; }
+        .drawer-menu li:hover { background: #f1f5f9; color: #0ea5e9; }
+
+        /* Admin Panel */
+        #admin-screen { position: absolute; inset: 0; background: var(--primary-bg); display: none; flex-direction: column; z-index: 900; }
+        #admin-screen.active { display: flex; }
+        .admin-tabs { display: flex; background: #fff; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--border-color); padding: 0 5vw; }
+        .admin-tab { padding: 20px 24px; font-size: 14px; font-weight: 600; color: #94a3b8; cursor: pointer; border-bottom: 3px solid transparent; white-space: nowrap; }
+        .admin-tab.active { color: #0ea5e9; border-bottom-color: #0ea5e9; }
+        .admin-content { flex: 1; overflow-y: auto; padding: 30px 5vw; }
+        .admin-pane { display: none; max-width: 1000px; margin: 0 auto; }
+        .admin-pane.active { display: block; }
+        .admin-card { background: #fff; border-radius: 20px; padding: 30px; box-shadow: var(--shadow); margin-bottom: 24px; }
+        .admin-card h3 { font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 20px; }
+        .f-input { width: 100%; padding: 16px 20px; border: 1.5px solid #e2e8f0; border-radius: 14px; font-size: 14px; outline: none; margin-bottom: 16px; background: #f8fafc; }
+        .admin-btn { width: 100%; padding: 16px; border: none; border-radius: 14px; background: linear-gradient(135deg, #0ea5e9, #2563eb); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; }
+
+        /* Responsive */
+        @media (min-width: 900px) {
+            .auth-container { flex-direction: row; overflow: hidden; }
+            .left-panel { display: flex; }
+            .right-panel { min-height: auto; padding: 40px; }
+            .slider-wrapper { display: none; }
+            .desktop-graphic { display: block; }
+        }
+        @media (max-width: 899px) {
+            .auth-container { flex-direction: column; height: auto; min-height: 100vh; overflow-y: auto; }
+            .left-panel { display: none; }
+            .right-panel { padding: 20px; min-height: 100vh; }
+            .auth-card { padding: 30px 24px; }
+            .slider-wrapper { display: block; }
+            .desktop-graphic { display: none; }
+            .view-section { padding: 20px; }
+            .home-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- INTRO ANIMATION -->
+        <div id="intro-screen">
+            <div class="intro-logo" id="introLogo">Gyan Automation</div>
+            <div class="intro-graph">
+                <svg class="intro-svg" viewBox="0 0 300 380">
+                    <path class="intro-line" id="i-line1" d="M150 30 L150 85" />
+                    <path class="intro-line" id="i-line2" d="M150 125 L150 170" />
+                    <path class="intro-line" id="i-line3" d="M150 210 L150 280 L40 280 L40 330" />
+                    <path class="intro-line" id="i-line4" d="M150 210 L150 330" />
+                    <path class="intro-line" id="i-line5" d="M150 210 L150 280 L260 280 L260 330" />
+                </svg>
+                <div class="intro-node in-scada" id="i-scada"><i class="fas fa-network-wired"></i> SCADA</div>
+                <div class="intro-node in-hmi" id="i-hmi"><i class="fas fa-desktop"></i> HMI</div>
+                <div class="intro-node in-plc" id="i-plc"><i class="fas fa-microchip"></i> PLC</div>
+                <div class="intro-node in-vfd" id="i-vfd"><i class="fas fa-bolt"></i> VFD</div>
+                <div class="intro-node in-servo" id="i-servo"><i class="fas fa-cogs"></i> Servo</div>
+                <div class="intro-node in-hyd" id="i-hyd"><i class="fas fa-tint"></i> Hydraulics</div>
+            </div>
+        </div>
+
+        <!-- AUTH SCREEN -->
+        <div id="auth-screen">
+            <div class="bg-grid"></div>
+            <div class="glow-blob glow-1"></div>
+            <div class="glow-blob glow-2"></div>
+
+            <div class="auth-container">
+                <!-- Left Panel (PC Only) -->
+                <div class="left-panel">
+                    <h1 class="hero-title">Master Industrial<br>Automation.</h1>
+                    <p class="hero-subtitle">Seekho. Banao. Automate karo. Get industry-ready skills with our live classes, interactive PLC simulations, and expert guidance.</p>
+
+                    <!-- Perfectly Aligned Animation -->
+                    <div class="network-wrapper-auth">
+                        <svg class="svg-lines" viewBox="0 0 1000 450" preserveAspectRatio="none">
+                            <path class="data-line" d="M 500 70 L 500 130" />
+                            <path class="data-line" d="M 500 180 L 500 240" />
+                            <path class="data-line" d="M 500 290 L 500 340 L 150 340 L 150 370" />
+                            <path class="data-line" d="M 500 290 L 500 370" />
+                            <path class="data-line" d="M 500 290 L 500 340 L 850 340 L 850 370" />
+                            
+                            <path class="data-line-animated" d="M 500 70 L 500 130" />
+                            <path class="data-line-animated" d="M 500 180 L 500 240" />
+                            <path class="data-line-animated" d="M 500 290 L 500 340 L 150 340 L 150 370" style="animation-delay: 0.3s;" />
+                            <path class="data-line-animated" d="M 500 290 L 500 370" style="animation-delay: 0.6s;" />
+                            <path class="data-line-animated" d="M 500 290 L 500 340 L 850 340 L 850 370" style="animation-delay: 0.9s;" />
+                        </svg>
+                        <div class="node node-scada"><i class="fas fa-network-wired"></i><span>SCADA</span></div>
+                        <div class="node node-hmi"><i class="fas fa-desktop"></i><span>HMI</span></div>
+                        <div class="node node-plc"><i class="fas fa-microchip"></i><span>PLC</span></div>
+                        <div class="node node-vfd"><i class="fas fa-bolt"></i><span>VFD</span></div>
+                        <div class="node node-servo"><i class="fas fa-cogs"></i><span>Servo</span></div>
+                        <div class="node node-hyd"><i class="fas fa-tint"></i><span>Hydraulics</span></div>
+                    </div>
+                </div>
+
+                <!-- Right Panel -->
+                <div class="right-panel">
+                    <div class="auth-card">
+                        <div class="logo-wrapper">
+                            <div class="logo-icon"><i class="fas fa-robot"></i></div>
+                            <h2>Gyan Automation</h2>
+                            <p>Learn • Build • Automate</p>
+                        </div>
+
+                        <div class="tabs">
+                            <div class="tab active" onclick="switchTab('login')">Sign In</div>
+                            <div class="tab" onclick="switchTab('register')">Create Account</div>
+                            <div class="tab-indicator" id="tabIndicator"></div>
+                        </div>
+
+                        <form id="loginForm" onsubmit="doLogin(event)">
+                            <div class="input-group">
+                                <input id="loginId" type="text" placeholder="Email or Phone Number" required>
+                                <i class="far fa-envelope"></i>
+                            </div>
+                            <div class="input-group">
+                                <input id="loginPass" type="password" placeholder="Password" required>
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <div class="form-options">
+                                <label class="remember"><input type="checkbox"> Remember me</label>
+                                <a href="#" class="forgot" onclick="resetPassword()">Forgot password?</a>
+                            </div>
+                            <button type="submit" class="btn-submit" id="loginBtn">Sign In <i class="fas fa-arrow-right"></i></button>
+                        </form>
+
+                        <form id="registerForm" style="display: none;" onsubmit="doRegister(event)">
+                            <div class="input-group">
+                                <input id="regName" type="text" placeholder="Full Name" required>
+                                <i class="far fa-user"></i>
+                            </div>
+                            <div class="input-group">
+                                <input id="regEmail" type="text" placeholder="Email or Phone Number" required>
+                                <i class="far fa-envelope"></i>
+                            </div>
+                            <div class="input-group">
+                                <input id="regPass" type="password" placeholder="Create Password" required>
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <button type="submit" class="btn-submit" id="regBtn">Create Account <i class="fas fa-user-plus"></i></button>
+                        </form>
+
+                        <div class="auth-footer">
+                            <p><i class="fas fa-shield-alt"></i> Secure 256-bit encrypted connection</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STUDENT APP -->
+        <div id="app-screen">
+            <header class="app-header">
+                <div class="header-left">
+                    <i class="fas fa-bars menu-icon" onclick="toggleDrawer()"></i>
+                    <span class="app-title" id="appHeaderTitle">Gyan Automation</span>
+                </div>
+                <i class="far fa-bell bell-icon" onclick="toast('No new notifications')"></i>
+            </header>
+
+            <div class="main-content" id="mainContent">
+                <!-- HOME -->
+                <section id="home-view" class="view-section active">
+                    <div class="greeting-area">
+                        <div class="greeting"><h2>Hello, <span id="userName">Student</span></h2><p>Ready to learn something new?</p></div>
+                        <div class="profile-avatar" onclick="toggleDrawer()"></div>
+                    </div>
+
+                    <div class="banner-container">
+                        <!-- Mobile Slider -->
+                        <div class="slider-wrapper">
+                            <div class="slider-track" id="sliderTrack"></div>
+                        </div>
+                        
+                        <!-- PC Graphic - Perfectly Aligned with Wires & Advanced Animation -->
+                        <div class="desktop-graphic">
+                            <div class="network-wrapper">
+                                <svg class="svg-lines" viewBox="0 0 1000 450" preserveAspectRatio="none">
+                                    <path class="data-line" d="M 500 70 L 500 130" />
+                                    <path class="data-line" d="M 500 180 L 500 240" />
+                                    <path class="data-line" d="M 500 290 L 500 340 L 150 340 L 150 370" />
+                                    <path class="data-line" d="M 500 290 L 500 370" />
+                                    <path class="data-line" d="M 500 290 L 500 340 L 850 340 L 850 370" />
+                                    
+                                    <path class="data-line-animated" d="M 500 70 L 500 130" />
+                                    <path class="data-line-animated" d="M 500 180 L 500 240" />
+                                    <path class="data-line-animated" d="M 500 290 L 500 340 L 150 340 L 150 370" style="animation-delay: 0.3s;" />
+                                    <path class="data-line-animated" d="M 500 290 L 500 370" style="animation-delay: 0.6s;" />
+                                    <path class="data-line-animated" d="M 500 290 L 500 340 L 850 340 L 850 370" style="animation-delay: 0.9s;" />
+                                </svg>
+                                <div class="node node-scada"><i class="fas fa-network-wired"></i><span>SCADA System</span></div>
+                                <div class="node node-hmi"><i class="fas fa-desktop"></i><span>HMI Panel</span></div>
+                                <div class="node node-plc"><i class="fas fa-microchip"></i><span>PLC Controller</span></div>
+                                <div class="node node-vfd"><i class="fas fa-bolt"></i><span>VFD Drive</span></div>
+                                <div class="node node-servo"><i class="fas fa-cogs"></i><span>Servo Motors</span></div>
+                                <div class="node node-hyd"><i class="fas fa-tint"></i><span>Hydraulics</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="home-grid">
+                        <button class="tile t-orange" onclick="switchView('paid-view')"><span class="tile-ico"><i class="fas fa-circle-play"></i></span><span class="tile-lbl">Paid Course</span></button>
+                        <button class="tile t-blue" onclick="openCategory('ebooks')"><span class="tile-ico"><i class="fas fa-book"></i></span><span class="tile-lbl">E-Books</span></button>
+                        <button class="tile t-cyan" onclick="openCategory('software')"><span class="tile-ico"><i class="fas fa-laptop-code"></i></span><span class="tile-lbl">Software</span></button>
+                        <button class="tile t-green" onclick="openCategory('study')"><span class="tile-ico"><i class="fas fa-graduation-cap"></i></span><span class="tile-lbl">Study Material</span></button>
+                        <button class="tile t-royal" onclick="openCategory('live')"><span class="tile-ico"><i class="fas fa-chalkboard-user"></i></span><span class="tile-lbl">Live Class</span></button>
+                        <button class="tile t-yellow" onclick="openCategory('test')"><span class="tile-ico"><i class="fas fa-file-pen"></i></span><span class="tile-lbl">Test Series</span></button>
+                        <button class="tile t-pink" onclick="openCategory('video')"><span class="tile-ico"><i class="fas fa-video"></i></span><span class="tile-lbl">Free Video</span></button>
+                        <button class="tile t-deep" onclick="openCategory('social')"><span class="tile-ico"><i class="fas fa-share-nodes"></i></span><span class="tile-lbl">Social Media</span></button>
+                    </div>
+                </section>
+
+                <!-- PAID COURSE -->
+                <section id="paid-view" class="view-section">
+                    <div class="sub-head">
+                        <button class="back-btn" onclick="switchView('home-view')"><i class="fas fa-arrow-left"></i></button>
+                        <div class="section-title"><i class="fas fa-layer-group" style="color:#0ea5e9;"></i> Paid Courses</div>
+                    </div>
+                    <div id="batchList" class="batch-list"></div>
+                </section>
+
+                <!-- BATCH DETAILS -->
+                <section id="batch-detail-view" class="view-section">
+                    <div class="sub-head">
+                        <button class="back-btn" onclick="switchView('paid-view')"><i class="fas fa-arrow-left"></i></button>
+                        <div class="section-title" id="batchDetailTitle">Batch Details</div>
+                    </div>
+                    <div class="batch-tabs" style="display:flex; background:#fff; border-radius:12px; padding:6px; margin-bottom:24px; box-shadow:var(--shadow); max-width:600px;">
+                        <div class="active" id="tab-overview" onclick="switchBatchTab('overview')" style="flex:1; text-align:center; padding:12px; font-size:14px; font-weight:600; border-radius:8px; cursor:pointer; background:#0f172a; color:#fff;">Overview</div>
+                        <div id="tab-content" onclick="switchBatchTab('content')" style="flex:1; text-align:center; padding:12px; font-size:14px; font-weight:600; border-radius:8px; cursor:pointer; color:#64748b;">Content</div>
+                    </div>
+                    <div id="batchTabBody" style="max-width: 900px;"></div>
+                </section>
+
+                <!-- FOLDER VIEW -->
+                <section id="folder-view" class="view-section">
+                    <div class="sub-head">
+                        <button class="back-btn" onclick="backFromFolder()"><i class="fas fa-arrow-left"></i></button>
+                        <div class="section-title" id="folderViewTitle">Folder</div>
+                    </div>
+                    <div id="folderItemsList" style="max-width: 900px;"></div>
+                </section>
+
+                <!-- CATEGORY -->
+                <section id="cat-view" class="view-section">
+                    <div class="sub-head">
+                        <button class="back-btn" onclick="switchView('home-view')"><i class="fas fa-arrow-left"></i></button>
+                        <div class="section-title"><i id="catIcon" class="fas fa-folder" style="color:#0ea5e9;"></i> <span id="catTitle">Category</span></div>
+                    </div>
+                    <div id="catBody"></div>
+                </section>
+
+                <!-- MY COURSES -->
+                <section id="courses-view" class="view-section">
+                    <div class="section-title" style="margin-bottom:24px;"><i class="fas fa-play-circle" style="color:#0ea5e9;"></i> My Courses</div>
+                    <div id="myCourses" class="batch-list"></div>
+                </section>
+
+                <!-- CHAT (Fixed Layout) -->
+                <section id="chat-view">
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="chat-input-area">
+                        <input id="chatInput" type="text" placeholder="Type your message here...">
+                        <i class="fas fa-paper-plane" onclick="sendChat()"></i>
+                    </div>
+                </section>
+                
+                <!-- DOWNLOADS -->
+                <section id="downloads-view" class="view-section">
+                    <div class="section-title"><i class="fas fa-download" style="color:#0ea5e9;"></i> Downloads</div>
+                    <div style="text-align:center; padding:40px;"><i class="fas fa-folder-open" style="font-size:48px;color:#cbd5e1;"></i><h3>No Content Available</h3></div>
+                </section>
+            </div>
+
+            <div class="sticky-buy-bar" id="buyBar" style="display:none; position:absolute; bottom:0; width:100%; background:#fff; padding:16px 5vw; box-shadow:0 -4px 15px rgba(0,0,0,0.08); z-index:50;">
+                <button id="btnBuyNow" onclick="initiateBuy()" style="width:100%; padding:16px; border-radius:12px; background:linear-gradient(135deg,#0ea5e9,#2563eb); color:#fff; font-weight:700; font-size:15px; border:none; cursor:pointer;"><i class="fas fa-shopping-cart"></i> Buy Now</button>
+            </div>
+
+            <!-- Bottom Nav (Fixed) -->
+            <nav class="bottom-nav" id="bottomNav">
+                <div class="nav-item active" data-target="home-view" onclick="switchView('home-view')"><i class="fas fa-home"></i><span>Home</span></div>
+                <div class="nav-item" data-target="courses-view" onclick="switchView('courses-view')"><i class="fas fa-book-open"></i><span>My Courses</span></div>
+                <div class="nav-item" data-target="chat-view" onclick="switchView('chat-view')"><i class="far fa-comment-alt"></i><span>Chat</span></div>
+                <div class="nav-item" data-target="downloads-view" onclick="switchView('downloads-view')"><i class="fas fa-download"></i><span>Downloads</span></div>
+                <div class="nav-item" onclick="window.open('https://wa.me/916202320527','_blank')"><i class="fab fa-whatsapp"></i><span>Whatsapp</span></div>
+            </nav>
+
+            <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer()"></div>
+            <div class="drawer" id="drawer">
+                <div class="drawer-profile">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
+                    <h2 id="drawerName">Student</h2>
+                    <p style="font-size:12px;color:#94a3b8;" id="drawerEmail">student@email.com</p>
+                </div>
+                <ul class="drawer-menu">
+                    <li onclick="switchView('home-view'); toggleDrawer();"><i class="fas fa-home"></i> Home</li>
+                    <li onclick="switchView('courses-view'); toggleDrawer();"><i class="fas fa-book-open"></i> My Courses</li>
+                    <li onclick="switchView('chat-view'); toggleDrawer();"><i class="far fa-comment-alt"></i> Chat</li>
+                    <li onclick="logout()" style="color:#ef4444;"><i class="fas fa-sign-out-alt" style="color:#ef4444;"></i> Logout</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ADMIN PANEL -->
+        <div id="admin-screen">
+            <header class="app-header" style="background:#fff;">
+                <div class="header-left">
+                    <span style="background:#0f172a;color:#fff;font-size:10px;font-weight:700;padding:6px 12px;border-radius:20px;">ADMIN</span>
+                </div>
+                <i class="fas fa-sign-out-alt bell-icon" onclick="logout()"></i>
+            </header>
+            <div class="admin-tabs">
+                <div class="admin-tab active" data-tab="batches" onclick="adminTab('batches')">Batches</div>
+                <div class="admin-tab" data-tab="payments" onclick="adminTab('payments')">Payments</div>
+                <div class="admin-tab" data-tab="students" onclick="adminTab('students')">Students</div>
+                <div class="admin-tab" data-tab="settings" onclick="adminTab('settings')">Settings</div>
+            </div>
+            <div class="admin-content">
+                <div id="admin-batches" class="admin-pane active"></div>
+                <div id="admin-payments" class="admin-pane"></div>
+                <div id="admin-students" class="admin-pane"></div>
+                <div id="admin-settings" class="admin-pane"></div>
+            </div>
+        </div>
+
+        <!-- Modal & Overlays -->
+        <div id="app-modal" style="position:fixed; inset:0; background:var(--primary-bg); z-index:3000; display:flex; flex-direction:column; transform:translateY(100%); transition:transform .35s; opacity:0; pointer-events:none;">
+            <div style="padding:16px 5vw; display:flex; align-items:center; gap:16px; background:#fff;">
+                <button class="back-btn" onclick="closeModal()"><i class="fas fa-arrow-left"></i></button>
+                <h2 id="modal-title" style="font-size:18px; font-weight:700; color:#0f172a;">Title</h2>
+            </div>
+            <div id="modal-body" style="flex:1; overflow-y:auto; padding:20px 5vw;"></div>
+        </div>
+
+        <div id="payOverlay" style="position:fixed; inset:0; background:rgba(15,23,42,.62); z-index:4000; display:flex; align-items:flex-end; justify-content:center; opacity:0; pointer-events:none; transition:.3s;">
+            <div id="paySheet" style="width:100%; max-width:500px; background:#fff; border-radius:26px 26px 0 0; padding:24px 20px; transform:translateY(100%); transition:transform .45s;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                    <span><i class="fas fa-lock"></i> Secure Payment</span>
+                    <i class="fas fa-times" onclick="closePayment()" style="cursor:pointer;"></i>
+                </div>
+                <div id="payContent"></div>
+            </div>
+        </div>
+
+        <div id="toast" style="position:fixed; left:50%; bottom:110px; transform:translate(-50%,20px); background:#0f172a; color:#fff; padding:14px 24px; border-radius:12px; font-size:13px; font-weight:500; opacity:0; pointer-events:none; transition:.35s; z-index:5000;"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plyr/3.7.8/plyr.min.js"></script>
+
+    <script>
+        /* CONFIG */
+        const firebaseConfig = {
+            apiKey: "AIzaSyBeZl52HEWGz-vE72QZ5taznvpYTfq3QUk",
+            authDomain: "login-and-reg-5728d.firebaseapp.com",
+            projectId: "login-and-reg-5728d",
+            storageBucket: "login-and-reg-5728d.firebasestorage.app",
+            messagingSenderId: "435846403197",
+            appId: "1:435846403197:web:d6a05a55e40839d15dcd14"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const PHONE_DOMAIN = '@phone.gyanautomation.app';
+
+        let state = { user: null, isAdmin: false, profile: null, batches: [], myPurchases: [], currentBatch: null, currentTab: 'overview', currentFolderTitle: '', paymentMethod: 'upi', processing: false };
+        const $ = id => document.getElementById(id);
+        
+        let SLIDER_IMAGES = ["https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1000"];
+
+        /* UTILS */
+        function toast(msg) { const t = $('toast'); t.textContent = msg; t.style.opacity = '1'; t.style.transform = 'translate(-50%, 0)'; setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translate(-50%, 20px)'; }, 3000); }
+        function esc(s) { return String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        function fmtPrice(n) { return Number(n) === 0 ? 'FREE' : '₹ ' + Number(n).toLocaleString('en-IN'); }
+        function toAuthEmail(val) { val = val.trim().toLowerCase(); if(val.includes('@')) return val; const d = val.replace(/\D/g, ''); return d.length >= 10 ? d.slice(-10) + PHONE_DOMAIN : null; }
+        function openModal(title, bodyHtml) { $('modal-title').textContent = title; $('modal-body').innerHTML = bodyHtml; $('app-modal').style.transform = 'translateY(0)'; $('app-modal').style.opacity = '1'; $('app-modal').style.pointerEvents = 'auto'; }
+        function closeModal() { $('app-modal').style.transform = 'translateY(100%)'; $('app-modal').style.opacity = '0'; $('app-modal').style.pointerEvents = 'none'; if(window.player) { window.player.destroy(); window.player = null; } }
+        function toggleDrawer() { $('drawer').classList.toggle('active'); $('drawerOverlay').classList.toggle('active'); }
+
+        /* INTRO ANIMATION LOGIC */
+        function playIntro(callback) {
+            const intro = $('intro-screen');
+            intro.classList.remove('hide');
+            
+            document.querySelectorAll('.intro-node').forEach(n => n.classList.remove('show'));
+            document.querySelectorAll('.intro-line').forEach(l => l.classList.remove('draw'));
+            
+            setTimeout(() => $('introLogo').classList.add('show'), 100);
+            setTimeout(() => $('i-scada').classList.add('show'), 400);
+            setTimeout(() => $('i-line1').classList.add('draw'), 700);
+            setTimeout(() => $('i-hmi').classList.add('show'), 1000);
+            setTimeout(() => $('i-line2').classList.add('draw'), 1300);
+            setTimeout(() => $('i-plc').classList.add('show'), 1600);
+            setTimeout(() => { $('i-line3').classList.add('draw'); $('i-line4').classList.add('draw'); $('i-line5').classList.add('draw'); }, 1900);
+            setTimeout(() => { $('i-vfd').classList.add('show'); $('i-servo').classList.add('show'); $('i-hyd').classList.add('show'); }, 2300);
+            
+            setTimeout(() => {
+                intro.classList.add('hide');
+                if(callback) callback();
+            }, 3200); 
+        }
+
+        /* AUTH & DEVICE LOGIN */
+        function getDeviceToken() {
+            let token = localStorage.getItem('ga_device_token');
+            if (!token) {
+                token = Math.random().toString(36).substring(2) + Date.now().toString(36);
+                localStorage.setItem('ga_device_token', token);
+            }
+            return token;
+        }
+
+        function switchTab(tab) {
+            const tabs = document.querySelectorAll('.tab');
+            if (tab === 'login') {
+                tabs[0].classList.add('active'); tabs[1].classList.remove('active');
+                $('tabIndicator').style.transform = 'translateX(0)';
+                $('loginForm').style.display = 'block'; $('registerForm').style.display = 'none';
+            } else {
+                tabs[0].classList.remove('active'); tabs[1].classList.add('active');
+                $('tabIndicator').style.transform = 'translateX(100%)';
+                $('loginForm').style.display = 'none'; $('registerForm').style.display = 'block';
+            }
+        }
+
+        async function doLogin(e) {
+            e.preventDefault();
+            const email = toAuthEmail($('loginId').value);
+            const pass = $('loginPass').value;
+            if(!email) return toast('Enter valid email/phone');
+            
+            $('loginBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Please wait...'; $('loginBtn').disabled = true;
+            try { 
+                const cred = await auth.signInWithEmailAndPassword(email, pass); 
+                await db.collection('users').doc(cred.user.uid).update({ activeDevice: getDeviceToken() });
+            } catch(err) { 
+                toast(err.message); $('loginBtn').innerHTML = 'Sign In <i class="fas fa-arrow-right"></i>'; $('loginBtn').disabled = false; 
+            }
+        }
+
+        async function doRegister(e) {
+            e.preventDefault();
+            const name = $('regName').value; const email = toAuthEmail($('regEmail').value); const pass = $('regPass').value;
+            if(!email) return toast('Enter valid email/phone');
+            if(pass.length < 6) return toast('Password must be 6+ chars');
+            
+            $('regBtn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...'; $('regBtn').disabled = true;
+            try {
+                const cred = await auth.createUserWithEmailAndPassword(email, pass);
+                await db.collection('users').doc(cred.user.uid).set({ name, email, phone: $('regEmail').value.includes('@') ? '' : $('regEmail').value, joined: Date.now(), activeDevice: getDeviceToken() });
+                toast('Account created successfully!');
+            } catch(err) { 
+                toast(err.message); $('regBtn').innerHTML = 'Create Account'; $('regBtn').disabled = false; 
+            }
+        }
+
+        async function resetPassword() {
+            const email = toAuthEmail($('loginId').value);
+            if(!email) return toast('Enter your email/phone first');
+            try { await auth.sendPasswordResetEmail(email); toast('Reset link sent!'); } catch(e) { toast(e.message); }
+        }
+        function logout() { auth.signOut(); }
+
+        auth.onAuthStateChanged(async user => {
+            if(user) {
+                state.user = user;
+                const adminDoc = await db.collection('admins').doc(user.uid).get();
+                state.isAdmin = adminDoc.exists;
+                
+                if(state.isAdmin) {
+                    $('auth-screen').classList.add('hide');
+                    $('app-screen').classList.remove('active');
+                    $('admin-screen').classList.add('active');
+                    adminTab('batches');
+                } else {
+                    const token = getDeviceToken();
+                    const userRef = db.collection('users').doc(user.uid);
+                    const uDoc = await userRef.get();
+                    
+                    if(uDoc.exists) {
+                        const data = uDoc.data();
+                        if(data.activeDevice && data.activeDevice !== token) {
+                            await auth.signOut();
+                            alert('Your account is logged in on another device. Please login there.');
+                            return;
+                        }
+                        if(!data.activeDevice || data.activeDevice !== token) {
+                            await userRef.update({ activeDevice: token });
+                        }
+                    }
+                    $('auth-screen').classList.add('hide');
+                    $('admin-screen').classList.remove('active');
+                    $('app-screen').classList.add('active');
+                    loadStudentData();
+                }
+            } else {
+                state.user = null; state.isAdmin = false;
+                $('auth-screen').classList.remove('hide');
+                $('app-screen').classList.remove('active');
+                $('admin-screen').classList.remove('active');
+                $('loginBtn').innerHTML = 'Sign In <i class="fas fa-arrow-right"></i>'; $('loginBtn').disabled = false;
+                $('regBtn').innerHTML = 'Create Account'; $('regBtn').disabled = false;
+            }
+        });
+
+        /* STUDENT APP */
+        let unsubBatches, unsubPurchases;
+        async function loadStudentData() {
+            if(unsubBatches) unsubBatches(); if(unsubPurchases) unsubPurchases();
+            const uDoc = await db.collection('users').doc(state.user.uid).get();
+            if(uDoc.exists) {
+                state.profile = uDoc.data();
+                $('userName').textContent = state.profile.name || 'Student';
+                $('drawerName').textContent = state.profile.name || 'Student';
+                $('drawerEmail').textContent = state.profile.email || state.user.email;
+            }
+
+            db.collection('config').doc('app').onSnapshot(doc => {
+                if(doc.exists && doc.data().bannerImage) SLIDER_IMAGES = [doc.data().bannerImage];
+                initSlider();
+            });
+
+            unsubBatches = db.collection('batches').orderBy('createdAt', 'desc').onSnapshot(snap => {
+                state.batches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderBatches(); renderMyCourses();
+                if($('batch-detail-view').classList.contains('active') && state.currentBatch) renderBatchDetails();
+            });
+
+            unsubPurchases = db.collection('users').doc(state.user.uid).collection('purchases').onSnapshot(snap => {
+                state.myPurchases = snap.docs.map(d => d.data());
+                renderBatches(); renderMyCourses();
+                if($('batch-detail-view').classList.contains('active') && state.currentBatch) renderBatchDetails();
+            });
+
+            switchView('home-view');
+            loadChat();
+        }
+
+        function initSlider() {
+            const track = $('sliderTrack'); if(!track) return;
+            track.innerHTML = SLIDER_IMAGES.map(src => `<img class="slide-img" src="${src}">`).join('');
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            $('chat-view').classList.remove('active');
+            
+            if(viewId === 'chat-view') {
+                $('chat-view').classList.add('active');
+            } else {
+                $(viewId).classList.add('active');
+            }
+            
+            $('buyBar').style.display = 'none';
+            $('bottomNav').style.transform = 'translateY(0)';
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.target === viewId));
+            $('mainContent').scrollTop = 0;
+        }
+
+        function renderBatches() {
+            const box = $('batchList'); if(!box) return;
+            const courses = state.batches.filter(b => !b.kind);
+            if(courses.length === 0) { box.innerHTML = '<div style="text-align:center;padding:40px;">No Courses Available</div>'; return; }
+            box.innerHTML = courses.map(b => {
+                const owned = isPurchased(b.id);
+                return `<div class="batch-card" onclick="openBatchDetails('${b.id}')">
+                    <div class="batch-img" style="background-image:url('${esc(b.image || SLIDER_IMAGES[0])}')"></div>
+                    <div class="batch-body">
+                        <div class="batch-title">${esc(b.title)}</div>
+                        <div class="batch-meta"><i class="far fa-clock"></i> ${b.days || 365} Days Validity</div>
+                        <div class="batch-foot">
+                            <div class="batch-price">${fmtPrice(b.price)}</div>
+                            ${owned ? `<button class="btn-buy owned">Open</button>` : `<button class="btn-buy">View</button>`}
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderMyCourses() {
+            const box = $('myCourses'); if(!box) return;
+            const owned = state.batches.filter(b => isPurchased(b.id));
+            if(owned.length === 0) { box.innerHTML = '<div style="text-align:center;padding:40px;">No Courses Yet</div>'; return; }
+            box.innerHTML = owned.map(b => `
+                <div class="batch-card" onclick="openBatchDetails('${b.id}')">
+                    <div class="batch-img" style="background-image:url('${esc(b.image || SLIDER_IMAGES[0])}')"></div>
+                    <div class="batch-body">
+                        <div class="batch-title">${esc(b.title)}</div>
+                        <button class="btn-buy" style="width:100%;justify-content:center;margin-top:16px;"><i class="fas fa-play"></i> Continue</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function isPurchased(batchId) { return state.myPurchases.some(p => p.batchId === batchId && p.expiry > Date.now()); }
+        let allCurrentItems = [];
+
+        function openBatchDetails(batchId) {
+            state.currentBatch = state.batches.find(b => b.id === batchId);
+            if(!state.currentBatch) return;
+            state.currentTab = 'overview';
+            switchView('batch-detail-view');
+            $('batchDetailTitle').textContent = state.currentBatch.title;
+            renderBatchDetails();
+        }
+
+        function switchBatchTab(tab) {
+            state.currentTab = tab;
+            $('tab-overview').style.background = tab === 'overview' ? '#0f172a' : 'transparent';
+            $('tab-overview').style.color = tab === 'overview' ? '#fff' : '#64748b';
+            $('tab-content').style.background = tab === 'content' ? '#0f172a' : 'transparent';
+            $('tab-content').style.color = tab === 'content' ? '#fff' : '#64748b';
+            renderBatchDetails();
+        }
+
+        function renderBatchDetails() {
+            const b = state.currentBatch; const body = $('batchTabBody');
+            const purchased = isPurchased(b.id);
+
+            if(state.currentTab === 'overview') {
+                $('buyBar').style.display = 'block'; $('bottomNav').style.transform = 'translateY(100%)';
+                const btn = $('btnBuyNow');
+                if(purchased) { btn.innerHTML = 'Open Content'; btn.onclick = () => switchBatchTab('content'); }
+                else { btn.innerHTML = b.price === 0 ? 'Enroll Free' : 'Buy Now'; btn.onclick = () => initiateBuy(); }
+
+                body.innerHTML = `
+                    <img src="${esc(b.image || SLIDER_IMAGES[0])}" style="width:100%;height:300px;border-radius:16px;object-fit:cover;margin-bottom:24px;">
+                    <div style="font-size:26px;font-weight:700;margin-bottom:12px;">${esc(b.title)}</div>
+                    <div style="font-size:28px;font-weight:800;margin-bottom:24px;">${fmtPrice(b.price)}</div>
+                    <div style="font-size:15px;color:#64748b;line-height:1.8;">${esc(b.desc || 'No description.')}</div>
+                `;
+            } else {
+                $('buyBar').style.display = 'none'; $('bottomNav').style.transform = 'translateY(0)';
+                body.innerHTML = `<div id="content-items"><div style="text-align:center;padding:20px;"><i class="fas fa-spinner fa-spin"></i></div></div>`;
+                
+                db.collection('batches').doc(b.id).collection('items').where('parent', '==', 'root').get().then(snap => {
+                    allCurrentItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    const box = $('content-items');
+                    const visibleItems = allCurrentItems.filter(item => item.access === 'free' || purchased);
+                    
+                    if(visibleItems.length === 0) { box.innerHTML = '<div style="text-align:center;padding:40px;">Locked.</div>'; return; }
+                    box.innerHTML = visibleItems.map(i => renderItemCard(i, purchased)).join('');
+                });
+            }
+        }
+
+        function renderItemCard(item, purchased) {
+            if(item.type === 'folder') {
+                return `<div class="folder-card" onclick="openFolder('${item.id}', '${esc(item.title).replace(/'/g,"\\'")}')" style="background:#fff;padding:20px;border-radius:16px;margin-bottom:16px;display:flex;align-items:center;gap:20px;box-shadow:var(--shadow);cursor:pointer;">
+                    <div style="font-size:28px;color:#64748b;"><i class="fas fa-folder"></i></div>
+                    <div style="flex:1;font-weight:600;font-size:16px;">${esc(item.title)}</div>
+                    <i class="fas fa-chevron-right" style="color:#94a3b8;"></i>
+                </div>`;
+            } else {
+                const icon = item.type === 'pdf' ? 'fa-file-pdf' : 'fa-play';
+                const isFree = item.access === 'free';
+                if(!isFree && !purchased) return `<div style="padding:20px;background:#fff;border-radius:16px;margin-bottom:16px;opacity:0.7;">Locked</div>`;
+
+                return `<div class="video-card" style="background:#fff; border-radius:16px; padding:16px; display:flex; gap:20px; margin-bottom:16px; box-shadow:var(--shadow); align-items:center;">
+                    <div style="width:120px;height:80px;background:#e2e8f0;border-radius:10px;display:flex;align-items:center;justify-content:center;position:relative;">
+                        <i class="fas ${icon}" style="color:#64748b; font-size:24px;"></i>
+                        ${isFree ? '<div style="position:absolute;top:-8px;right:-8px;background:#10b981;color:#fff;font-size:10px;font-weight:700;padding:4px 8px;border-radius:10px;">FREE</div>' : ''}
+                    </div>
+                    <div style="flex:1;">
+                        <div style="font-size:16px; font-weight:600; margin-bottom:12px;">${esc(item.title)}</div>
+                        <button onclick="playVideoFromDetails('${item.id}')" style="background:#0f172a;color:#fff;border:none;padding:10px 24px;border-radius:8px;font-size:13px;font-weight:600;"><i class="fas fa-play"></i> Watch</button>
+                    </div>
+                </div>`;
+            }
+        }
+
+        function openFolder(folderId, title) {
+            state.currentFolderTitle = title;
+            switchView('folder-view'); $('folderViewTitle').textContent = title;
+            $('folderItemsList').innerHTML = '<div style="text-align:center;padding:20px;"><i class="fas fa-spinner fa-spin"></i></div>';
+            const purchased = isPurchased(state.currentBatch.id);
+            
+            db.collection('batches').doc(state.currentBatch.id).collection('items').where('parent', '==', folderId).get().then(snap => {
+                const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                const box = $('folderItemsList');
+                const visibleItems = items.filter(item => item.access === 'free' || purchased);
+                box.innerHTML = visibleItems.map(i => renderItemCard(i, purchased)).join('');
+            });
+        }
+
+        function backFromFolder() { switchView('batch-detail-view'); switchBatchTab('content'); }
+
+        function playVideoFromDetails(itemId) {
+            const item = allCurrentItems.find(x => x.id === itemId);
+            if(!item) return;
+            $('modal-body').style.padding = '0';
+            let html = '';
+            
+            if(item.url && (item.url.includes('youtube.com') || item.url.includes('youtu.be'))) {
+                let vid = '';
+                try {
+                    const urlObj = new URL(item.url);
+                    if (urlObj.hostname.includes('youtu.be')) {
+                        vid = urlObj.pathname.slice(1);
+                    } else {
+                        vid = urlObj.searchParams.get('v');
+                    }
+                } catch (e) {
+                    vid = item.url.split('v=')[1]?.split('&')[0] || item.url.split('/').pop();
+                }
+                html = `<div id="player" data-plyr-provider="youtube" data-plyr-embed-id="${vid}" style="width:100%; height:100%;"></div>`;
+            } else if(item.type === 'pdf') {
+                html = `<iframe src="${item.url}" style="width:100%;height:100%;border:0;"></iframe>`;
+            } else {
+                html = `<video id="player" playsinline controls style="width:100%; height:100%;"><source src="${item.url}" type="video/mp4" /></video>`;
+            }
+            openModal(item.title, html);
+            if(item.type !== 'pdf') setTimeout(() => { if(window.Plyr) window.player = new Plyr('#player'); }, 100);
+        }
+
+        /* PAYMENT */
+        function initiateBuy() {
+            const b = state.currentBatch;
+            if(b.price === 0) {
+                db.collection('users').doc(state.user.uid).collection('purchases').doc(b.id).set({ batchId: b.id, purchasedAt: Date.now(), expiry: Date.now() + ((b.days || 365) * 86400000) })
+                    .then(() => { toast('Enrolled!'); renderBatchDetails(); });
+                return;
+            }
+            $('payOverlay').style.opacity = '1'; $('payOverlay').style.pointerEvents = 'auto';
+            $('paySheet').style.transform = 'translateY(0)';
+            $('payContent').innerHTML = `
+                <div style="font-size:32px;font-weight:800;text-align:center;">${fmtPrice(b.price)}</div>
+                <div style="font-size:13px;color:#64748b;text-align:center;margin-bottom:24px;">${esc(b.title)}</div>
+                <input type="text" id="utrInput" class="f-input" placeholder="Enter UTR">
+                <button style="width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:15px;font-weight:700;" onclick="processPayment()">Pay Now</button>
+            `;
+        }
+
+        function closePayment() { $('payOverlay').style.opacity = '0'; $('payOverlay').style.pointerEvents = 'none'; $('paySheet').style.transform = 'translateY(100%)'; }
+
+        async function processPayment() {
+            const utr = $('utrInput').value.trim();
+            if(utr.length < 6) return toast('Invalid UTR');
+            await db.collection('payRequests').add({ uid: state.user.uid, userName: state.profile?.name || 'Student', batchId: state.currentBatch.id, title: state.currentBatch.title, amount: state.currentBatch.price, utr, status: 'pending', createdAt: Date.now() });
+            toast('Payment Submitted!'); closePayment(); renderBatchDetails();
+        }
+
+        /* CATEGORY & CHAT */
+        function openCategory(key) {
+            $('catTitle').textContent = key.toUpperCase();
+            switchView('cat-view');
+            $('catBody').innerHTML = '<div style="text-align:center;padding:40px;">Coming Soon</div>';
+        }
+
+        function loadChat() {
+            db.collection('chats').doc(state.user.uid).collection('messages').orderBy('ts', 'asc').onSnapshot(snap => {
+                const box = $('chatMessages');
+                if (snap.empty) {
+                    box.innerHTML = '<div style="text-align:center; padding: 40px; color:#94a3b8;"><i class="far fa-comment-alt" style="font-size:48px; margin-bottom:12px;"></i><p>No messages yet. Start a conversation!</p></div>';
+                    return;
+                }
+                box.innerHTML = snap.docs.map(d => {
+                    const m = d.data();
+                    return `<div style="display:flex;flex-direction:column;max-width:80%;${m.from === 'user' ? 'align-self:flex-end;align-items:flex-end;' : 'align-self:flex-start;'}">
+                        <div style="padding:14px 20px;border-radius:16px;font-size:15px;background:${m.from === 'user' ? '#0ea5e9' : '#fff'};color:${m.from === 'user' ? '#fff' : '#0f172a'}; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">${esc(m.text)}</div>
+                    </div>`;
+                }).join('');
+                box.scrollTop = box.scrollHeight;
+            });
+        }
+
+        async function sendChat() {
+            const text = $('chatInput').value.trim(); if(!text) return;
+            $('chatInput').value = '';
+            await db.collection('chats').doc(state.user.uid).collection('messages').add({ from: 'user', text, ts: Date.now() });
+        }
+
+        /* ADMIN PANEL */
+        function adminTab(tab) {
+            document.querySelectorAll('.admin-tab').forEach(d => d.classList.toggle('active', d.dataset.tab === tab));
+            document.querySelectorAll('.admin-pane').forEach(p => p.classList.remove('active'));
+            $(`admin-${tab}`).classList.add('active');
+            if(tab === 'batches') renderAdminBatches();
+            if(tab === 'payments') renderAdminPayments();
+            if(tab === 'students') renderAdminStudents();
+            if(tab === 'settings') renderAdminSettings();
+        }
+
+        function renderAdminBatches() {
+            $('admin-batches').innerHTML = `
+                <div class="admin-card">
+                    <h3>Add Batch</h3>
+                    <input type="text" id="abTitle" class="f-input" placeholder="Title">
+                    <input type="number" id="abPrice" class="f-input" placeholder="Price">
+                    <input type="text" id="abImg" class="f-input" placeholder="Image URL">
+                    <button class="admin-btn" onclick="createBatch()">Create</button>
+                </div>
+                <div id="admin-batch-list" class="admin-card"></div>
+            `;
+            db.collection('batches').get().then(snap => {
+                $('admin-batch-list').innerHTML = snap.docs.map(d => {
+                    const b = d.data();
+                    return `<div style="padding:16px 0;border-bottom:1px solid #eee;">${esc(b.title)}</div>`;
+                }).join('');
+            });
+        }
+
+        async function createBatch() {
+            await db.collection('batches').add({ title: $('abTitle').value, price: Number($('abPrice').value), image: $('abImg').value, days: 365, createdAt: Date.now() });
+            toast('Batch Created'); renderAdminBatches();
+        }
+
+        function renderAdminPayments() { $('admin-payments').innerHTML = '<p>Pending payments here.</p>'; }
+        function renderAdminStudents() { $('admin-students').innerHTML = '<p>Students list here.</p>'; }
+        
+        function renderAdminSettings() {
+            $('admin-settings').innerHTML = `
+                <div class="admin-card">
+                    <h3>Change Slider Image (Home)</h3>
+                    <p style="font-size:14px;color:#64748b;margin-bottom:20px;">Paste an image URL from Google or Imgur.</p>
+                    <input type="text" id="cfgBanner" class="f-input" placeholder="https://example.com/image.jpg">
+                    <button class="admin-btn" onclick="updateBanner()">Update Slider</button>
+                </div>
+            `;
+            db.collection('config').doc('app').get().then(doc => {
+                if(doc.exists && doc.data().bannerImage) $('cfgBanner').value = doc.data().bannerImage;
+            });
+        }
+
+        async function updateBanner() {
+            const url = $('cfgBanner').value.trim();
+            if(!url) return toast('Enter URL');
+            await db.collection('config').doc('app').set({ bannerImage: url }, { merge: true });
+            toast('Slider Updated');
+        }
+
+        /* START APP WITH INTRO */
+        window.addEventListener('DOMContentLoaded', () => {
+            playIntro(() => {
+                // Intro ke baad auth check hoga
+            });
+        });
+    </script>
+</body>
+</html>
